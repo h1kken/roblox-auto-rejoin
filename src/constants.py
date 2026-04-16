@@ -1,6 +1,6 @@
-from src.paths import PATH_TO_FISHSTRAP
 from src.enums import JoinToFriends
 from src.ansi import ANSI
+from src.paths import detect_roblox_path
 from src.utils import log
 
 
@@ -9,13 +9,11 @@ PROCESS_NAME = 'robloxplayerbeta'
 RECHECK_CHILD_PROCESSES_INTERVAL = 0.1
 
 # roblox
-PATH_TO_ROBLOX = PATH_TO_FISHSTRAP
-log(str(PATH_TO_ROBLOX), ANSI.CYAN)
+PATH_ROBLOX = detect_roblox_path()
 
 PLACE_IDS = {
     "Slime RNG": 92416421522960
 }
-
 PLACE_NAME = "Slime RNG"
 PLACE_ID = PLACE_IDS.get(PLACE_NAME)
 

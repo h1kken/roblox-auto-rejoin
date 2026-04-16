@@ -12,12 +12,16 @@ from src.http import HttpClient
 from src.process import RobloxLauncher
 from src.roblox import get_user_info, get_place_id_user_in
 from src.utils import cls, log
+from src.constants import PATH_ROBLOX
 
 load_dotenv()
 
 
 async def main() -> None:
     cls()
+    if PATH_ROBLOX:
+        log(f"Detected Roblox path: {PATH_ROBLOX}", ANSI.GREEN)
+    
     print(ANSI.BOLD, end="")
 
     cookie = os.getenv("ROBLOX_COOKIE")

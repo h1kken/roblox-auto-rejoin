@@ -9,7 +9,7 @@ import psutil
 from src.ansi import ANSI
 from src.constants import PLACE_ID, PROCESS_NAME, RECHECK_CHILD_PROCESSES_INTERVAL
 from src.http import HttpClient
-from src.paths import PATH_TO_FISHSTRAP
+from src.paths import PATH_FISHSTRAP
 from src.roblox import get_auth_ticket, get_job_id
 from src.utils import generate_browser_tracker_id, generate_launch_time, log
 
@@ -79,7 +79,7 @@ class RobloxLauncher:
             self.kill()
 
         try:
-            process = subprocess.Popen([os.path.expandvars(PATH_TO_FISHSTRAP), arguments])
+            process = subprocess.Popen([os.path.expandvars(PATH_FISHSTRAP), arguments])
         except Exception:
             log("Failed to launch Roblox", ANSI.RED)
             return False
