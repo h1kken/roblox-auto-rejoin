@@ -1,13 +1,3 @@
-# roblox-auto-rejoin
-
-Небольшой скрипт для авто-захода в нужный плейс Roblox, если аккаунт вылетел или не находится в игре.
-
-## Что нужно
-
-- Python 3.11+
-- Установленный Fishstrap
-- Cookie `.ROBLOSECURITY`
-
 ## Установка
 
 ```powershell
@@ -22,7 +12,7 @@ pip install -r requirements.txt
 ROBLOX_COOKIE=твой_куки_сюда
 ```
 
-Основные настройки лежат в [src/constants.py](/d:/Desktop/Learning/Programming/.maintained/roblox-auto-rejoin/src/constants.py):
+Основные настройки лежат в [src/constants.py](src/constants.py):
 
 - `PLACE_NAME`
 - `FIRSTLY_SMALL_SERVERS`
@@ -36,9 +26,3 @@ ROBLOX_COOKIE=твой_куки_сюда
 ```powershell
 python main.py
 ```
-
-## Стек
-
-- `aiohttp`
-- `psutil`
-- `python-dotenv`
