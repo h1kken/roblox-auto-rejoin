@@ -23,7 +23,7 @@ async def get_user_info(client: HttpClient) -> int | None:
         return user_id, name, display_name
     except Exception as e:
         log(f"Failed to get User Info ({type(e).__name__}): {e!r}", ANSI.RED)
-        return None
+        return None, None, None
 
 
 async def get_place_id_user_in(
