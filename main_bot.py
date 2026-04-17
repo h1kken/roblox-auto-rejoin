@@ -226,12 +226,6 @@ async def start_autocheck(
             last_status=current_status,
         )
 
-        if send_enabled_message:
-            await bot.rest.create_message(
-                dm_channel.id,
-                f"Auto-check enabled for `{username}` every {get_check_interval()}s.",
-            )
-
         task = asyncio.create_task(
             autocheck_loop(
                 bot,
@@ -245,6 +239,19 @@ async def start_autocheck(
         AUTOCHECK_TASKS[discord_user_id] = task
     except Exception:
         traceback.print_exc()
+
+
+async def safe_respond(
+    ctx: lightbulb.Context,
+    content: str,
+    *,
+    ephemeral: bool = False,
+) -> bool:
+    try:
+        await ctx.respond(content, ephemeral=ephemeral)
+        return True
+    except hikari.NotFoundError:
+        return False
 
 
 async def restore_autochecks(bot: hikari.GatewayBot, cookie: str) -> None:
@@ -422,23 +429,24 @@ def build_bot() -> hikari.GatewayBot:
                 task = AUTOCHECK_TASKS.pop(ctx.user.id, None)
                 remove_autocheck(ctx.user.id)
                 if task is None:
-                    await ctx.respond("Auto-check is already off.", ephemeral=True)
+                    await safe_respond(ctx, "Auto-check is already off.", ephemeral=True)
                     return
 
                 task.cancel()
-                await ctx.respond("Auto-check disabled.", ephemeral=True)
+                await safe_respond(ctx, "Auto-check disabled.", ephemeral=True)
                 return
 
             nick = (get_default_nick(ctx.user.id) or "").strip()
             if not nick:
-                await ctx.respond("Nick is not set. Use `/setnick` first.", ephemeral=True)
+                await safe_respond(ctx, "Nick is not set. Use `/setnick` first.", ephemeral=True)
                 return
 
             existing = AUTOCHECK_TASKS.pop(ctx.user.id, None)
             if existing is not None:
                 existing.cancel()
 
-            await ctx.respond(
+            await safe_respond(
+                ctx,
                 f"Starting auto-check for `{nick}`. Notifications will be sent in DMs.",
                 ephemeral=True,
             )
