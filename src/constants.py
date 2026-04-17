@@ -1,7 +1,5 @@
 from src.enums import JoinToFriends
-from src.ansi import ANSI
 from src.paths import detect_roblox_path
-from src.utils import log
 
 
 # process
