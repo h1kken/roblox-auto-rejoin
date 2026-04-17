@@ -39,14 +39,6 @@ def load_state() -> dict:
             "autochecks": {},
         }
 
-    # Migrate the old flat {"user_id": "nick"} format.
-    if all(isinstance(key, str) and isinstance(value, str) for key, value in data.items()):
-        return {
-            "default_nicks": data,
-            "check_interval": DEFAULT_CHECK_INTERVAL,
-            "autochecks": {},
-        }
-
     return {
         "default_nicks": data.get("default_nicks", {}),
         "check_interval": int(data.get("check_interval", DEFAULT_CHECK_INTERVAL)),
