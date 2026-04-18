@@ -28,6 +28,3 @@ def detect_roblox_path() -> Path | None:
         for path in paths:
             if ROBLOX_VERSION_PATTERN.search(str(path)):
                 return path
-    log('Can\'t detect Roblox installation path', ANSI.RED)
-    input("Press Enter to exit...")
-    exit(1)
