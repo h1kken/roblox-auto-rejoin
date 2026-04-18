@@ -48,7 +48,7 @@ async def get_user_by_username(
         display_name = user["displayName"]
         return user_id, name, display_name
     except Exception as e:
-        log(f"Failed to get User By Username ({type(e).__name__}): {e!r}", ANSI.RED)
+        log(f" [!] Failed to get User Info By Username ({type(e).__name__}): {e!r}", ANSI.RED)
         return None, None, None
 
 
@@ -61,7 +61,7 @@ async def get_place_id_user_in(
         user_id, _, _ = await get_user_info(client)
 
     if user_id is None:
-        log("Failed to get Place ID: user_id is None", ANSI.RED)
+        log(" [!] Failed to get Place ID: user_id is None", ANSI.RED)
         return None
 
     try:
@@ -74,7 +74,7 @@ async def get_place_id_user_in(
         place_id = response.json()["userPresences"][0]["placeId"]
         return place_id
     except Exception as e:
-        log(f"Failed to get Place ID ({type(e).__name__}): {e!r}", ANSI.RED)
+        log(f" [!] Failed to get Place ID ({type(e).__name__}): {e!r}", ANSI.RED)
         return None
 
 
@@ -87,10 +87,10 @@ async def get_x_csrf_token(client: HttpClient) -> str | None:
         x_csrf_token = response.header("x-csrf-token")
         if not x_csrf_token:
             raise KeyError("x-csrf-token")
-        log(f"X-CSRF-Token: {x_csrf_token}", ANSI.CYAN)
+        log(f" [+] Successfully got X-CSRF-Token", ANSI.CYAN)
         return x_csrf_token
     except Exception as e:
-        log(f"Failed to get X-CSRF-Token ({type(e).__name__}): {e!r}", ANSI.RED)
+        log(f" [!] Failed to get X-CSRF-Token ({type(e).__name__}): {e!r}", ANSI.RED)
         return None
 
 
@@ -103,7 +103,7 @@ async def get_auth_ticket(
         x_csrf_token = await get_x_csrf_token(client)
 
     if not x_csrf_token:
-        log("Failed to get Authentication Ticket: X-CSRF-Token is missing", ANSI.RED)
+        log(" [!] Failed to get Authentication Ticket: X-CSRF-Token is missing", ANSI.RED)
         return None
 
     headers = {
@@ -120,10 +120,10 @@ async def get_auth_ticket(
         ticket = response.header("rbx-authentication-ticket")
         if not ticket:
             raise KeyError("rbx-authentication-ticket")
-        log(f"Authentication Ticket: {ticket}", ANSI.CYAN)
+        log(f" [+] Successfully got Authentication Ticket", ANSI.CYAN)
         return ticket
     except Exception as e:
-        log(f"Failed to get Authentication Ticket ({type(e).__name__}): {e!r}", ANSI.RED)
+        log(f" [!] Failed to get Authentication Ticket ({type(e).__name__}): {e!r}", ANSI.RED)
         return None
 
 
@@ -137,9 +137,9 @@ async def get_job_id(client: HttpClient) -> str | None:
         for index, server_type in enumerate(server_types):
             match index:
                 case 0 if server_type == 1:
-                    log("Searching for servers with friends...")
+                    log(" [?] Searching for servers with friends...")
                 case _:
-                    log("Searching for any servers...")
+                    log(" [?] Searching for any servers...")
 
             response = (await client.get(
                 f"https://games.roblox.com/v1/games/{PLACE_ID}/servers/{server_type}",
@@ -155,12 +155,12 @@ async def get_job_id(client: HttpClient) -> str | None:
                 break
 
         if not servers:
-            log("Failed to get Job ID: server list is empty", ANSI.RED)
+            log(" [!] Failed to get Job ID: server list is empty", ANSI.RED)
             return None
 
         job_id = servers[0]["id"]
-        log(f"Job ID: {job_id}", ANSI.CYAN)
+        log(f" [+] Job ID: {job_id}", ANSI.CYAN)
         return job_id
     except Exception as e:
-        log(f"Failed to get Job ID ({type(e).__name__}): {e!r}", ANSI.RED)
+        log(f" [!] Failed to get Job ID ({type(e).__name__}): {e!r}", ANSI.RED)
         return None
