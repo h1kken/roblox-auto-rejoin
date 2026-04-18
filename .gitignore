@@ -1,6 +1,8 @@
 .env
 .venv
 
+test.*
+
 __pycache__/
 .vscode/
 bot_state.json
