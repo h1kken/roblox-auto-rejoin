@@ -414,22 +414,22 @@ async def autocheck_loop(
 
             if current_status:
                 bot_console_log(
-                    f"✅ AutoCheck | is in {format_place(target_place_id, target_place_name)}",
+                    f"✅ AutoCheck | `{username}` is in {format_place(target_place_id, target_place_name)}",
                     ANSI.GREEN,
                 )
                 await bot.rest.create_message(
                     dm_channel.id,
-                    f"✅ AutoCheck | is in {format_place(target_place_id, target_place_name)}",
+                    f"✅ AutoCheck | `{username}` is in {format_place(target_place_id, target_place_name)}",
                     flags=get_message_flags(discord_user_id),
                 )
             else:
                 bot_console_log(
-                    f"❌ AutoCheck | is not in {format_place(target_place_id, target_place_name)}",
+                    f"❌ AutoCheck | `{username}` is not in {format_place(target_place_id, target_place_name)}",
                     ANSI.RED,
                 )
                 await bot.rest.create_message(
                     dm_channel.id,
-                    f"❌ AutoCheck | is not in {format_place(target_place_id, target_place_name)}",
+                    f"❌ AutoCheck | `{username}` is not in {format_place(target_place_id, target_place_name)}",
                     flags=get_message_flags(discord_user_id),
                 )
 
@@ -449,14 +449,14 @@ async def farm_loop(
     username: str,
     *,
     process_pid: int | None = None,
-    suppress_initial_notification: bool = False,
+    suppress_initial_in_notification: bool = False,
 ) -> None:
     launcher = RobloxLauncher(process_pid if isinstance(process_pid, int) and psutil.pid_exists(process_pid) else None)
     cookies = {".ROBLOSECURITY": cookie}
     current_task = asyncio.current_task()
     last_action: str | None = None
     dm_channel = await bot.rest.create_dm_channel(discord_user_id)
-    skip_next_notification = suppress_initial_notification
+    skip_initial_in_notification = suppress_initial_in_notification
 
     try:
         async with HttpClient(cookies=cookies) as client:
@@ -467,7 +467,7 @@ async def farm_loop(
                     if place_id == target_place_id:
                         action_key = f"in:{target_place_id}"
                         if last_action != action_key:
-                            if not skip_next_notification:
+                            if not skip_initial_in_notification:
                                 bot_console_log(
                                     f"✅ AutoFarm | `{username}` is in {format_place(target_place_id, target_place_name)}",
                                     ANSI.GREEN,
@@ -478,42 +478,40 @@ async def farm_loop(
                                     flags=get_message_flags(discord_user_id),
                                 )
                             last_action = action_key
-                            skip_next_notification = False
+                            skip_initial_in_notification = False
                         await asyncio.sleep(RECHECK_PLAYER_IN_PLACE_INTERVAL)
                         continue
 
                     if place_id is not None and not get_force_rejoin(discord_user_id):
                         action_key = f"other:{place_id}"
                         if last_action != action_key:
-                            if not skip_next_notification:
-                                bot_console_log(
-                                    f"⏸️ AutoFarm | `{username}` is in another place ({place_id})",
-                                    ANSI.YELLOW,
-                                )
-                                await bot.rest.create_message(
-                                    dm_channel.id,
-                                    f"⏸️ AutoFarm | `{username}` is in another place ({place_id}). Force rejoin is off.",
-                                    flags=get_message_flags(discord_user_id),
-                                )
+                            bot_console_log(
+                                f"⏸️ AutoFarm | `{username}` is in another place ({place_id})",
+                                ANSI.YELLOW,
+                            )
+                            await bot.rest.create_message(
+                                dm_channel.id,
+                                f"⏸️ AutoFarm | `{username}` is in another place ({place_id}). Force rejoin is off.",
+                                flags=get_message_flags(discord_user_id),
+                            )
                             last_action = action_key
-                            skip_next_notification = False
+                            skip_initial_in_notification = False
                         await asyncio.sleep(RECHECK_PLAYER_IN_PLACE_INTERVAL)
                         continue
 
                     action_key = f"joining:{target_place_id}"
                     if last_action != action_key:
-                        if not skip_next_notification:
-                            bot_console_log(
-                                f"🔄 AutoFarm | `{username}` joining to {format_place(target_place_id, target_place_name)}",
-                                ANSI.YELLOW,
-                            )
-                            await bot.rest.create_message(
-                                dm_channel.id,
-                                f"🔄 AutoFarm | `{username}` joining to {format_place(target_place_id, target_place_name)}",
-                                flags=get_message_flags(discord_user_id),
-                            )
+                        bot_console_log(
+                            f"🔄 AutoFarm | `{username}` is joining {format_place(target_place_id, target_place_name)}",
+                            ANSI.YELLOW,
+                        )
+                        await bot.rest.create_message(
+                            dm_channel.id,
+                            f"🔄 AutoFarm | `{username}` is joining {format_place(target_place_id, target_place_name)}",
+                            flags=get_message_flags(discord_user_id),
+                        )
                         last_action = action_key
-                        skip_next_notification = False
+                        skip_initial_in_notification = False
 
                     await launcher.launch(client, place_id=target_place_id, log_output=False)
                     update_farm_process(
@@ -584,7 +582,7 @@ async def start_autocheck(
             status_text = "is in" if current_status else "is not in"
             await bot.rest.create_message(
                 dm_channel.id,
-                f"{'✅' if current_status else '❌'} AutoCheck | {status_text} {format_place(target_place_id, target_place_name)}",
+                f"{'✅' if current_status else '❌'} AutoCheck | `{username}` {status_text} {format_place(target_place_id, target_place_name)}",
                 flags=get_message_flags(discord_user_id),
             )
     except Exception:
@@ -704,7 +702,7 @@ async def restore_farms(bot: hikari.GatewayBot) -> None:
                 user_id,
                 username,
                 process_pid=process_pid if isinstance(process_pid, int) else None,
-                suppress_initial_notification=True,
+                suppress_initial_in_notification=True,
             )
         )
 
@@ -1148,6 +1146,7 @@ def build_bot() -> hikari.GatewayBot:
                     user_id,
                     username,
                     process_pid=existing_process_pid,
+                    suppress_initial_in_notification=True,
                 )
             )
 
