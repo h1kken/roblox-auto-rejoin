@@ -78,7 +78,11 @@ async def get_place_id_user_in(
         return None
 
 
-async def get_x_csrf_token(client: HttpClient) -> str | None:
+async def get_x_csrf_token(
+    client: HttpClient,
+    *,
+    log_output: bool = True,
+) -> str | None:
     try:
         response = await client.post(
             "https://auth.roblox.com/v2/logout",
@@ -87,10 +91,12 @@ async def get_x_csrf_token(client: HttpClient) -> str | None:
         x_csrf_token = response.header("x-csrf-token")
         if not x_csrf_token:
             raise KeyError("x-csrf-token")
-        log(f" [+] Successfully got X-CSRF-Token", ANSI.CYAN)
+        if log_output:
+            log(f" [+] Successfully got X-CSRF-Token", ANSI.CYAN)
         return x_csrf_token
     except Exception as e:
-        log(f" [!] Failed to get X-CSRF-Token ({type(e).__name__}): {e!r}", ANSI.RED)
+        if log_output:
+            log(f" [!] Failed to get X-CSRF-Token ({type(e).__name__}): {e!r}", ANSI.RED)
         return None
 
 
@@ -98,12 +104,14 @@ async def get_auth_ticket(
     client: HttpClient,
     *,
     x_csrf_token: str | None = None,
+    log_output: bool = True,
 ) -> str | None:
     if x_csrf_token is None:
-        x_csrf_token = await get_x_csrf_token(client)
+        x_csrf_token = await get_x_csrf_token(client, log_output=log_output)
 
     if not x_csrf_token:
-        log(" [!] Failed to get Authentication Ticket: X-CSRF-Token is missing", ANSI.RED)
+        if log_output:
+            log(" [!] Failed to get Authentication Ticket: X-CSRF-Token is missing", ANSI.RED)
         return None
 
     headers = {
@@ -120,15 +128,56 @@ async def get_auth_ticket(
         ticket = response.header("rbx-authentication-ticket")
         if not ticket:
             raise KeyError("rbx-authentication-ticket")
-        log(f" [+] Successfully got Authentication Ticket", ANSI.CYAN)
+        if log_output:
+            log(f" [+] Successfully got Authentication Ticket", ANSI.CYAN)
         return ticket
     except Exception as e:
-        log(f" [!] Failed to get Authentication Ticket ({type(e).__name__}): {e!r}", ANSI.RED)
+        if log_output:
+            log(f" [!] Failed to get Authentication Ticket ({type(e).__name__}): {e!r}", ANSI.RED)
         return None
 
 
-async def get_job_id(client: HttpClient) -> str | None:
+async def get_place_name(
+    client: HttpClient,
+    place_id: int,
+) -> str | None:
     try:
+        universe_response = await client.get(
+            f"https://apis.roblox.com/universes/v1/places/{place_id}/universe",
+        )
+        universe_id = universe_response.json().get("universeId")
+        if universe_id is None:
+            return None
+
+        game_response = await client.get(
+            "https://games.roblox.com/v1/games",
+            params={
+                "universeIds": str(universe_id),
+            },
+        )
+        games = game_response.json().get("data", [])
+        if not games:
+            return None
+
+        game = games[0]
+        name = game.get("name")
+        if isinstance(name, str) and name.strip():
+            return name
+
+        return None
+    except Exception as e:
+        log(f" [!] Failed to get Place Name ({type(e).__name__}): {e!r}", ANSI.RED)
+        return None
+
+
+async def get_job_id(
+    client: HttpClient,
+    *,
+    place_id: int | None = None,
+    log_output: bool = True,
+) -> str | None:
+    try:
+        target_place_id = place_id or PLACE_ID
         server_types = [0]
         if JOIN_TO_FRIENDS == JoinToFriends.IF_AVAILABLE:
             server_types = [1, 0]
@@ -137,12 +186,14 @@ async def get_job_id(client: HttpClient) -> str | None:
         for index, server_type in enumerate(server_types):
             match index:
                 case 0 if server_type == 1:
-                    log(" [?] Searching for servers with friends...")
+                    if log_output:
+                        log(" [?] Searching for servers with friends...")
                 case _:
-                    log(" [?] Searching for any servers...")
+                    if log_output:
+                        log(" [?] Searching for any servers...")
 
             response = (await client.get(
-                f"https://games.roblox.com/v1/games/{PLACE_ID}/servers/{server_type}",
+                f"https://games.roblox.com/v1/games/{target_place_id}/servers/{server_type}",
                 params={
                     "sortOrder": int(FIRSTLY_SMALL_SERVERS),
                     "excludeFullGames": str(EXCLUDE_FULL_GAMES).lower(),
@@ -155,12 +206,15 @@ async def get_job_id(client: HttpClient) -> str | None:
                 break
 
         if not servers:
-            log(" [!] Failed to get Job ID: server list is empty", ANSI.RED)
+            if log_output:
+                log(" [!] Failed to get Job ID: server list is empty", ANSI.RED)
             return None
 
         job_id = servers[0]["id"]
-        log(f" [+] Job ID: {job_id}", ANSI.CYAN)
+        if log_output:
+            log(f" [+] Job ID: {job_id}", ANSI.CYAN)
         return job_id
     except Exception as e:
-        log(f" [!] Failed to get Job ID ({type(e).__name__}): {e!r}", ANSI.RED)
+        if log_output:
+            log(f" [!] Failed to get Job ID ({type(e).__name__}): {e!r}", ANSI.RED)
         return None

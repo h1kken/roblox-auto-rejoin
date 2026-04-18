@@ -100,19 +100,16 @@ async def main() -> None:
                 place_id = await get_place_id_user_in(client, user_id=user_id)
                 
                 if place_id == PLACE_ID:
-                    log(f"{name} is already in the game (id: {PLACE_ID})", ANSI.GREEN)
+                    log(f"is already in place ({PLACE_ID})", ANSI.GREEN)
                     await asyncio.sleep(RECHECK_PLAYER_IN_PLACE_INTERVAL)
                     continue
                 
                 if place_id is None and not REJOIN_IF_IN_OTHER_PLACE.is_set():
-                    log(
-                        f"{name} is not in any place. Rejoin is disabled, continuing checks...",
-                        ANSI.YELLOW,
-                    )
+                    log("is not in place", ANSI.YELLOW)
                     await asyncio.sleep(RECHECK_PLAYER_IN_PLACE_INTERVAL)
                     continue
 
-                log(f"{name} is joining... (id: {PLACE_ID})", ANSI.YELLOW)
+                log(f"joining ({PLACE_ID})", ANSI.YELLOW)
                 await launcher.launch(client)
                 await asyncio.sleep(RECHECK_AFTER_LAUNCH_INTERVAL)
             except Exception as error:

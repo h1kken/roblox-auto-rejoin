@@ -23,40 +23,53 @@ def get_child_processes(pid: int) -> list[psutil.Process]:
 
 
 class RobloxLauncher:
-    def __init__(self) -> None:
-        self._pid = None
+    def __init__(self, pid: int | None = None) -> None:
+        self._pid = pid
+
+    @property
+    def pid(self) -> int | None:
+        return self._pid
+
+    @property
+    def process_name(self) -> str:
+        return PROCESS_NAME
 
     async def launch(
         self,
         client: HttpClient,
         *,
+        place_id: int | None = None,
         server_id: str | None = None,
         auth_ticket: str | None = None,
+        log_output: bool = True,
     ) -> bool:
         launch_time = generate_launch_time()
         browser_tracker_id = generate_browser_tracker_id()
+        target_place_id = place_id or PLACE_ID
 
         if server_id is None:
-            server_id = await get_job_id(client)
+            server_id = await get_job_id(client, place_id=target_place_id, log_output=log_output)
 
         if not server_id:
-            log("Failed to launch Roblox: server_id is missing", ANSI.RED)
+            if log_output:
+                log("Failed to launch Roblox: server_id is missing", ANSI.RED)
             return False
 
         launch_url = quote(
             f"https://assetgame.roblox.com/game/PlaceLauncher.ashx"
             f"?request=RequestGame"
-            f"&placeId={PLACE_ID}"
+            f"&placeId={target_place_id}"
             f"&gameId={server_id}"
             f"&isPlayTogetherGame=true"
             f"&isTeleport=true"
         )
 
         if auth_ticket is None:
-            auth_ticket = await get_auth_ticket(client)
+            auth_ticket = await get_auth_ticket(client, log_output=log_output)
 
         if not auth_ticket:
-            log("Failed to launch Roblox: auth_ticket is missing", ANSI.RED)
+            if log_output:
+                log("Failed to launch Roblox: auth_ticket is missing", ANSI.RED)
             return False
 
         arguments = (
@@ -81,7 +94,8 @@ class RobloxLauncher:
         try:
             process = subprocess.Popen([os.path.expandvars(PATH_FISHSTRAP), arguments])
         except Exception:
-            log("Failed to launch Roblox", ANSI.RED)
+            if log_output:
+                log("Failed to launch Roblox", ANSI.RED)
             return False
 
         while True:
@@ -97,13 +111,14 @@ class RobloxLauncher:
 
         return True
 
-    def kill(self) -> None:
+    def kill(self, *, log_output: bool = True) -> None:
         if self._pid is None:
             return
 
         try:
             psutil.Process(self._pid).terminate()
         except psutil.NoSuchProcess:
-            log(f"Failed to kill Roblox process: PID {self._pid} does not exist", ANSI.RED)
+            if log_output:
+                log(f"Failed to kill Roblox process: PID {self._pid} does not exist", ANSI.RED)
         finally:
             self._pid = None
