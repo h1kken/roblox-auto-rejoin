@@ -1,6 +1,7 @@
 import os
 import asyncio
 import threading
+import ctypes
 from dotenv import load_dotenv
 from pynput import keyboard
 from src.ansi import ANSI
@@ -20,14 +21,33 @@ from src.constants import PATH_ROBLOX
 load_dotenv()
 
 REJOIN_IF_IN_OTHER_PLACE = threading.Event()
+PHYSICAL_R_KEY_VK = 0x52
+PHYSICAL_R_KEY_SCAN_CODE = 0x13
+USER32 = ctypes.windll.user32
+KERNEL32 = ctypes.windll.kernel32
+
+
+def is_console_window_focused() -> bool:
+    console_window = KERNEL32.GetConsoleWindow()
+    if not console_window:
+        return False
+
+    return USER32.GetForegroundWindow() == console_window
+
+
+def is_toggle_key(key: keyboard.Key | keyboard.KeyCode) -> bool:
+    return (
+        getattr(key, "vk", None) == PHYSICAL_R_KEY_VK
+        or getattr(key, "_scan", None) == PHYSICAL_R_KEY_SCAN_CODE
+    )
 
 
 def start_rejoin_toggle_listener() -> None:
-    def on_release(key: keyboard.Key) -> None:
-        try:
-            if key.char is None or key.char.lower() != "r":
-                return
-        except AttributeError:
+    def on_release(key: keyboard.Key | keyboard.KeyCode) -> None:
+        if not is_console_window_focused():
+            return
+
+        if not is_toggle_key(key):
             return
 
         enabled = not REJOIN_IF_IN_OTHER_PLACE.is_set()
