@@ -12,6 +12,11 @@ SYSTEM_DRIVE = Path(os.environ['SystemDrive'])
 # roblox
 PATH_FISHSTRAP = PATH_TO_LOCALAPPDATA / 'Fishstrap' / 'Fishstrap.exe'
 PATH_BLOXSTRAP = PATH_TO_LOCALAPPDATA / 'Bloxstrap' / 'Bloxstrap.exe'
+
+PATHS_ROBLOXPLAYERBETA = [
+    SYSTEM_DRIVE / 'Program Files (x86)' / 'Roblox' / 'Versions',
+    PATH_TO_LOCALAPPDATA / 'Roblox' / 'Versions',
+]
 PATH_ROBLOXPLAYERBETA = SYSTEM_DRIVE / 'Program Files (x86)' / 'Roblox' / 'Versions'
 
 
@@ -19,9 +24,12 @@ def detect_roblox_path() -> Path | None:
     if PATH_FISHSTRAP.exists(): return PATH_FISHSTRAP
     if PATH_BLOXSTRAP.exists(): return PATH_BLOXSTRAP
 
-    if PATH_ROBLOXPLAYERBETA.exists():
+    for roblox_path in PATHS_ROBLOXPLAYERBETA:
+        if not roblox_path.exists():
+            continue
+        
         paths = sorted(
-            list(PATH_ROBLOXPLAYERBETA.iterdir()),
+            list(roblox_path.iterdir()),
             key=lambda e: e.stat().st_mtime,
             reverse=True
         )
