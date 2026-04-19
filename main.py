@@ -8,6 +8,7 @@ from src.ansi import ANSI
 from src.config import get_rejoin_if_in_other_place, set_rejoin_if_in_other_place
 from src.constants import (
     PLACE_ID,
+    PLACE_NAME,
     RECHECK_AFTER_LAUNCH_INTERVAL,
     RECHECK_PLAYER_IN_PLACE_INTERVAL,
 )
@@ -100,16 +101,16 @@ async def main() -> None:
                 place_id = await get_place_id_user_in(client, user_id=user_id)
                 
                 if place_id == PLACE_ID:
-                    log(f"is already in place ({PLACE_ID})", ANSI.GREEN)
+                    log(f"{name} is in {PLACE_NAME} ({PLACE_ID})", ANSI.GREEN)
                     await asyncio.sleep(RECHECK_PLAYER_IN_PLACE_INTERVAL)
                     continue
                 
                 if place_id is None and not REJOIN_IF_IN_OTHER_PLACE.is_set():
-                    log("is not in place", ANSI.YELLOW)
+                    log(f"{name} is not in any place", ANSI.YELLOW)
                     await asyncio.sleep(RECHECK_PLAYER_IN_PLACE_INTERVAL)
                     continue
 
-                log(f"joining ({PLACE_ID})", ANSI.YELLOW)
+                log(f"{name} is joining in {PLACE_NAME} ({PLACE_ID})", ANSI.YELLOW)
                 await launcher.launch(client)
                 await asyncio.sleep(RECHECK_AFTER_LAUNCH_INTERVAL)
             except Exception as error:
