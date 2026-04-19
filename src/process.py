@@ -7,9 +7,8 @@ from urllib.parse import quote
 import psutil
 
 from src.ansi import ANSI
-from src.constants import PLACE_ID, PROCESS_NAME, RECHECK_CHILD_PROCESSES_INTERVAL
+from src.constants import PLACE_ID, PATH_ROBLOX, PROCESS_NAME, RECHECK_CHILD_PROCESSES_INTERVAL
 from src.http import HttpClient
-from src.paths import PATH_FISHSTRAP
 from src.roblox import get_auth_ticket, get_job_id
 from src.utils import generate_browser_tracker_id, generate_launch_time, log
 
@@ -92,10 +91,10 @@ class RobloxLauncher:
             self.kill()
 
         try:
-            process = subprocess.Popen([os.path.expandvars(PATH_FISHSTRAP), arguments])
-        except Exception:
+            process = subprocess.Popen([os.path.expandvars(PATH_ROBLOX), arguments])
+        except Exception as e:
             if log_output:
-                log("Failed to launch Roblox", ANSI.RED)
+                log(f" [!] Failed to launch Roblox: {e}", ANSI.RED)
             return False
 
         while True:
@@ -119,6 +118,6 @@ class RobloxLauncher:
             psutil.Process(self._pid).terminate()
         except psutil.NoSuchProcess:
             if log_output:
-                log(f"Failed to kill Roblox process: PID {self._pid} does not exist", ANSI.RED)
+                log(f" [!] Failed to kill Roblox process: PID {self._pid} does not exist", ANSI.RED)
         finally:
             self._pid = None
